@@ -24,8 +24,50 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 			return 0.0
 		}
 	}
-
-	var audioUrl: URL? {
+	
+	private var player: AVAudioPlayer?
+	private var progressLayers: NVProgressLayers?
+	private var playState: NVAudioButtonState?
+	private var backgroundCornRadius: CGFloat = 0.0
+	private var eclipseRect = CGRect.zero
+	private var stopRect = CGRect.zero
+	private var topPoint = CGPoint.zero
+	private var rightPoint = CGPoint.zero
+	private var bottomPoint = CGPoint.zero
+	
+	override init(frame: CGRect) {
+		super.init(frame: frame)
+		commonSetup()
+	}
+	
+	required init?(coder: NSCoder) {
+		super.init(coder: coder)
+		commonSetup()
+	}
+	
+	deinit {
+		if player != nil {
+			player?.stop()
+			player = nil
+		}
+		NVAudioSessionConfig.instanceVar?.unregisterAudioSessionNotification(for: self)
+	}
+	
+	public var shape: NVProgressLayersShape = .rectangle {
+		didSet {
+			self.progressLayers?.progressShape = shape
+			setNeedsDisplay()
+		}
+	}
+	
+	public var buttonColor: UIColor = .black {
+		didSet {
+			self.progressLayers?.progressColor = buttonColor
+			setNeedsDisplay()
+		}
+	}
+	
+	public var audioUrl: URL? {
 		didSet {
 			playState = .loading
 			if let player = player {
@@ -55,43 +97,8 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		}
 	}
 	
-	private var player: AVAudioPlayer?
-	private var progressLayers: NVProgressLayers?
-	private var playState: NVAudioButtonState?
-	private var backgroundCornRadius: CGFloat = 0.0
-	private var buttonColor: UIColor?
-	private var eclipseRect = CGRect.zero
-	private var stopRect = CGRect.zero
-	private var topPoint = CGPoint.zero
-	private var rightPoint = CGPoint.zero
-	private var bottomPoint = CGPoint.zero
-	
-	deinit {
-		if player != nil {
-			player?.stop()
-			player = nil
-		}
-		NVAudioSessionConfig.instanceVar?.unregisterAudioSessionNotification(for: self)
-	}
-	
-	func setup(withFrame frame: CGRect,
-			   isRound: Bool,
-			   backgroundColor aBackgroundColor: UIColor?,
-			   progressColor aProgressColor: UIColor?,
-			   audioPath anAudioUrl: URL?) {
-		
-		self.frame = frame
-		self.backgroundColor = .clear
-		self.buttonColor = aProgressColor
-		self.audioUrl = anAudioUrl
-		
-		self.playState = .idle
-
-		self.progressLayers = NVProgressLayers(view: self, back: aBackgroundColor, progressColor: aProgressColor, lineWidth: 3.0, progressShape: isRound ? .circle : .rectangle, cornRadius: &backgroundCornRadius)
-		self.progressLayers?.delegate = self
-
-		self.addTarget(self, action: #selector(buttonTouched), for: .touchUpInside)
-		
+	private
+	func updateFrame() {
 		let diameter: CGFloat = min(frame.size.height, frame.size.width) * 0.618
 		eclipseRect = CGRect(x: (frame.size.width - diameter) / 2,
 							 y: (frame.size.height - diameter) / 2,
@@ -113,8 +120,35 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 						  width: diameter / 2,
 						  height: diameter / 2)
 		
+		if self.progressLayers?.view == nil, frame != .zero {
+			self.progressLayers?.view = self
+		}
+		
+		setNeedsDisplay()
+	}
+	
+	private
+	func commonSetup() {
+		self.backgroundColor = .clear
+		self.playState = .idle
+		self.addTarget(self, action: #selector(buttonTouched), for: .touchUpInside)
+		//
+		self.progressLayers = NVProgressLayers()
+		self.progressLayers?.delegate = self
+		self.progressLayers?.progressShape = shape
+		self.progressLayers?.lineWidth = 2.0
+		self.progressLayers?.backColor = backgroundColor
+		self.progressLayers?.progressColor = buttonColor
+		self.progressLayers?.cornRadius?.pointee = backgroundCornRadius
 		//configure audio session, register notification for handleRouteChange.
 		NVAudioSessionConfig.instanceVar?.registerAudioSessionNotification(for: self)
+	}
+	
+	override func layoutSubviews() {
+		super.layoutSubviews()
+		if stopRect == .zero {
+			updateFrame()
+		}
 	}
 	
 	override func draw(_ rect: CGRect) {
@@ -124,9 +158,8 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		let path = UIBezierPath(roundedRect: self.bounds, cornerRadius: backgroundCornRadius)
 		path.fill()
 		
-		guard let ctx = UIGraphicsGetCurrentContext(),
-			  let bcolor = buttonColor else { return }
-		ctx.setFillColor(bcolor.cgColor)
+		guard let ctx = UIGraphicsGetCurrentContext() else { return }
+		ctx.setFillColor(buttonColor.cgColor)
 		ctx.setLineWidth(1.0)
 		
 		switch playState {

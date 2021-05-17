@@ -25,25 +25,52 @@ final class NVProgressLayers: NSObject {
 	}
 	weak var delegate: NVProgressLayersDelegate?
 	
-	private var backColor: UIColor?
-	private var progressColor: UIColor?
-	private var lineWidth: CGFloat = 0.0
+	public var backColor: UIColor? = .red {
+		didSet {
+			drawLayers()
+		}
+	}
+	public var progressColor: UIColor? = .orange {
+		didSet {
+			drawLayers()
+		}
+	}
+	
 	private var displayLink: CADisplayLink?
 	private var progressLayer: CAShapeLayer?
 	private var backgroundLayer: CAShapeLayer?
 	private var loadingLayer: CAShapeLayer?
 	
-	init(view: UIView?,
-		 back aBackColor: UIColor?,
-		 progressColor aProgressColor: UIColor?,
-		 lineWidth aLineWidth: CGFloat,
-		 progressShape: NVProgressLayersShape,
-		 cornRadius: UnsafeMutablePointer<CGFloat>?)
-	{
-		super.init()
-		backColor = aBackColor
-		progressColor = aProgressColor
-		lineWidth = aLineWidth
+	public var view: UIView? = nil {
+		didSet {
+			drawLayers()
+		}
+	}
+	
+	public var progressShape: NVProgressLayersShape = .rectangle {
+		didSet {
+			drawLayers()
+		}
+	}
+	
+	public var cornRadius: UnsafeMutablePointer<CGFloat>? {
+		didSet {
+			drawLayers()
+		}
+	}
+	
+	public var lineWidth: CGFloat = 2.0 {
+		didSet {
+			drawLayers()
+		}
+	}
+	
+	private
+	func drawLayers() {
+		
+		backgroundLayer?.removeFromSuperlayer()
+		progressLayer?.removeFromSuperlayer()
+		loadingLayer?.removeFromSuperlayer()
 		
 		guard let view = view else { return }
 		switch progressShape {
@@ -87,6 +114,7 @@ final class NVProgressLayers: NSObject {
 	
 	private
 	func shapeForRectangle(view: UIView) -> CGFloat {
+		
 		let tempWidth: CGFloat = view.frame.width - lineWidth
 		let tempHeight: CGFloat = view.frame.height - lineWidth
 		var tempCornerRadius: CGFloat = min(tempWidth, tempHeight) / 3
@@ -94,6 +122,7 @@ final class NVProgressLayers: NSObject {
 			tempCornerRadius = lineWidth * 2
 		}
 		let rect: CGRect = CGRect(x: lineWidth / 2, y: lineWidth / 2, width: tempWidth, height: tempHeight)
+				
 		backgroundLayer = NVCommoners.createRoundRectLayer(with: rect, cornerRadius: tempCornerRadius, lineWidth: lineWidth, color: backColor)
 		progressLayer = NVCommoners.createRoundRectLayer(with: rect, cornerRadius: tempCornerRadius, lineWidth: lineWidth, color: progressColor)
 		loadingLayer = NVCommoners.createCircleLayerInclude(rect, cornerRadius: tempCornerRadius, lineWidth: lineWidth, color: progressColor)
@@ -135,7 +164,7 @@ final class NVProgressLayers: NSObject {
 		
 		if displayLink == nil {
 			displayLink = CADisplayLink(target: self, selector: #selector(updateProgress))
-//			displayLink?.preferredFramesPerSecond = 6
+			displayLink?.preferredFramesPerSecond = 60
 			displayLink?.add(to: .current, forMode: .common)
 		} else {
 			displayLink?.isPaused = false
@@ -149,9 +178,11 @@ final class NVProgressLayers: NSObject {
 	
 	func stop() {
 		stopLoading()
-		progressLayer?.isHidden = true
 		displayLink?.invalidate()
 		displayLink = nil
-		progress = 0
+		DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+			self.progress = 0.0
+			self.progressLayer?.isHidden = true
+		}
 	}
 }
