@@ -15,6 +15,7 @@ enum NVProgressLayersShape {
 
 protocol NVProgressLayersDelegate: NSObject {
 	func currentProgress() -> CGFloat
+	func currentCornerRadius(_ radius: CGFloat)
 }
 
 final class NVProgressLayers: NSObject {
@@ -53,12 +54,6 @@ final class NVProgressLayers: NSObject {
 		}
 	}
 	
-	public var cornRadius: UnsafeMutablePointer<CGFloat>? {
-		didSet {
-			drawLayers()
-		}
-	}
-	
 	public var lineWidth: CGFloat = 2.0 {
 		didSet {
 			drawLayers()
@@ -76,11 +71,12 @@ final class NVProgressLayers: NSObject {
 		switch progressShape {
 			case .circle:
 				let radi = shapeForCircle(view: view)
-				cornRadius?.pointee = radi + lineWidth / 2
+				let cRadi = radi + lineWidth / 2
+				delegate?.currentCornerRadius(cRadi)
 				break
 			case .rectangle:
 				let radi = shapeForRectangle(view: view)
-				cornRadius?.pointee = radi
+				delegate?.currentCornerRadius(radi)
 				break
 		}
 		
@@ -117,7 +113,7 @@ final class NVProgressLayers: NSObject {
 		
 		let tempWidth: CGFloat = view.frame.width - lineWidth
 		let tempHeight: CGFloat = view.frame.height - lineWidth
-		var tempCornerRadius: CGFloat = min(tempWidth, tempHeight) / 3
+		var tempCornerRadius: CGFloat = min(tempWidth, tempHeight) / 6
 		if (lineWidth * 2 < tempCornerRadius) {
 			tempCornerRadius = lineWidth * 2
 		}

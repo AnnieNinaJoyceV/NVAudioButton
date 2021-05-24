@@ -16,6 +16,11 @@ enum NVAudioButtonState {
 }
 
 final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDelegate, NVAudioSessionConfigDelegate {
+	
+	func currentCornerRadius(_ radius: CGFloat) {
+		backgroundCornRadius = radius
+	}
+	
 	func currentProgress() -> CGFloat {
 		if let player = player, player.currentTime <= player.duration {
 			let process = player.currentTime / player.duration
@@ -25,10 +30,17 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		}
 	}
 	
+	//***************----------------****************//
+	
 	private var player: AVAudioPlayer?
 	private var progressLayers: NVProgressLayers?
 	private var playState: NVAudioButtonState?
-	private var backgroundCornRadius: CGFloat = 0.0
+	private var backgroundCornRadius: CGFloat = 0.0 {
+		didSet {
+			self.layer.cornerRadius = backgroundCornRadius
+			setNeedsDisplay()
+		}
+	}
 	private var eclipseRect = CGRect.zero
 	private var stopRect = CGRect.zero
 	private var topPoint = CGPoint.zero
@@ -53,6 +65,19 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		NVAudioSessionConfig.instanceVar?.unregisterAudioSessionNotification(for: self)
 	}
 	
+	public var artWork: UIImage? {
+		didSet {
+			setNeedsDisplay()
+		}
+	}
+	
+	public var lineWidth: CGFloat = 2.0 {
+		didSet {
+			self.progressLayers?.lineWidth = lineWidth
+			setNeedsDisplay()
+		}
+	}
+	
 	public var shape: NVProgressLayersShape = .rectangle {
 		didSet {
 			self.progressLayers?.progressShape = shape
@@ -60,10 +85,28 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		}
 	}
 	
-	public var buttonColor: UIColor = .black {
+	public var progressColor: UIColor = .systemGray {
 		didSet {
-			self.progressLayers?.progressColor = buttonColor
+			self.progressLayers?.progressColor = progressColor
 			setNeedsDisplay()
+		}
+	}
+	
+	public var controlsBackgroundColor: UIColor = .white {
+		didSet {
+			setNeedsDisplay()
+		}
+	}
+	
+	public var controlsColor: UIColor = .systemGray {
+		didSet {
+			setNeedsDisplay()
+		}
+	}
+	
+	public var controlRatio: CGFloat = 1.0 {
+		didSet {
+			updateFrame()
 		}
 	}
 	
@@ -99,17 +142,22 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 	
 	private
 	func updateFrame() {
-		let diameter: CGFloat = min(frame.size.height, frame.size.width) * 0.618
+		
+		let const618: CGFloat = 309 / 500
+		let const866: CGFloat = 433 / 500
+		let const667: CGFloat = 333.5 / 500
+		
+		let diameter: CGFloat = min(frame.size.height, frame.size.width) * const618 * controlRatio
 		eclipseRect = CGRect(x: (frame.size.width - diameter) / 2,
 							 y: (frame.size.height - diameter) / 2,
 							 width: diameter,
 							 height: diameter)
 		
-		let side: CGFloat = diameter * 0.618
-		let leftX: CGFloat = eclipseRect.origin.x + (diameter - 0.866 * side) * 0.667
+		let side: CGFloat = diameter * const618
+		let leftX: CGFloat = eclipseRect.origin.x + (diameter - const866 * side) * const667
 		let topY: CGFloat = eclipseRect.origin.y + (diameter - side) / 2
 		let bottomY: CGFloat = eclipseRect.origin.y + (diameter + side) / 2
-		let rightX: CGFloat = leftX + 0.866 * side
+		let rightX: CGFloat = leftX + const866 * side
 		let middleY: CGFloat = eclipseRect.origin.y + diameter / 2
 		topPoint = CGPoint(x: leftX, y: topY)
 		rightPoint = CGPoint(x: rightX, y: middleY)
@@ -130,16 +178,17 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 	private
 	func commonSetup() {
 		self.backgroundColor = .clear
+		self.clipsToBounds = true
+		
 		self.playState = .idle
 		self.addTarget(self, action: #selector(buttonTouched), for: .touchUpInside)
 		//
 		self.progressLayers = NVProgressLayers()
 		self.progressLayers?.delegate = self
 		self.progressLayers?.progressShape = shape
-		self.progressLayers?.lineWidth = 2.0
+		self.progressLayers?.lineWidth = lineWidth
 		self.progressLayers?.backColor = backgroundColor
-		self.progressLayers?.progressColor = buttonColor
-		self.progressLayers?.cornRadius?.pointee = backgroundCornRadius
+		self.progressLayers?.progressColor = progressColor
 		//configure audio session, register notification for handleRouteChange.
 		NVAudioSessionConfig.instanceVar?.registerAudioSessionNotification(for: self)
 	}
@@ -153,13 +202,23 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 	
 	override func draw(_ rect: CGRect) {
 		super.draw(rect)
+		guard let ctx = UIGraphicsGetCurrentContext() else { return }
 		
 		backgroundColor?.setFill()
 		let path = UIBezierPath(roundedRect: self.bounds, cornerRadius: backgroundCornRadius)
 		path.fill()
 		
-		guard let ctx = UIGraphicsGetCurrentContext() else { return }
-		ctx.setFillColor(buttonColor.cgColor)
+		if let image = artWork {
+			let spacing: CGFloat = 5 + lineWidth
+			let drawingRect = self.bounds.inset(by: UIEdgeInsets.init(top: spacing, left: spacing, bottom: spacing, right: spacing))
+			image.draw(in: drawingRect)
+		}
+		
+		controlsBackgroundColor.setFill()
+		let path1 = UIBezierPath(roundedRect: self.eclipseRect, cornerRadius: self.eclipseRect.height / 2.0)
+		path1.fill()
+		
+		ctx.setFillColor(controlsColor.cgColor)
 		ctx.setLineWidth(1.0)
 		
 		switch playState {
