@@ -17,10 +17,21 @@ You are more than welcome if you decide to make this much better!
 
 • Adopted [AudioButton](https://github.com/xdpsee/AudioButton.git) from Obj-C to Swift
 
-• Followed [this](https://betterprogramming.pub/creating-a-library-using-swift-package-manager-in-xcode-701d5586e953) tutorial for SPM. 
+• [SPM](https://www.raywenderlich.com/7242045-swift-package-manager-for-ios) 
+
+• [Semantic Versioning](https://semver.org)
 
 ## Installation
 
+The [Swift Package Manager](https://swift.org/package-manager/) is a tool for managing the distribution of Swift code. It’s integrated with the Swift build system to automate the process of downloading, compiling, and linking dependencies.
+
+The Package Manager is included in Swift 3.0 and above.
+
+To integrate, follow these steps in Xcode
+
+```
+File >> Swift Packages >> Add Package Dependency... >> https://github.com/AnnieNinaJoyceV/NVAudioButton.git
+```
 
 ## Usage
 
