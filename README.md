@@ -1,4 +1,4 @@
-<img align="left" width="100" height="100" src="https://i.ibb.co/xXzKcqG/a-va-bien-aller-2.png"> 
+<img align="left" width="100" height="100" src="https://i.ibb.co/0qKbk1G/nv.png"> 
 
 # NVAudioButton
 ### Hi 👋
