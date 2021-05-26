@@ -30,7 +30,8 @@ The Package Manager is included in Swift 3.0 and above.
 To integrate, follow these steps in Xcode
 
 ```
-File >> Swift Packages >> Add Package Dependency... >> https://github.com/AnnieNinaJoyceV/NVAudioButton.git
+File >> Swift Packages >> Add Package Dependency... >>
+https://github.com/AnnieNinaJoyceV/NVAudioButton.git
 ```
 
 ## Usage
