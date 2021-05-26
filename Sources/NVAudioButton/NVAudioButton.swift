@@ -15,7 +15,7 @@ enum NVAudioButtonState {
 	case failed
 }
 
-final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDelegate, NVAudioSessionConfigDelegate {
+public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDelegate, NVAudioSessionConfigDelegate {
 	
 	func currentCornerRadius(_ radius: CGFloat) {
 		backgroundCornRadius = radius
@@ -193,14 +193,14 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		NVAudioSessionConfig.instanceVar?.registerAudioSessionNotification(for: self)
 	}
 	
-	override func layoutSubviews() {
+	public override func layoutSubviews() {
 		super.layoutSubviews()
 		if stopRect == .zero {
 			updateFrame()
 		}
 	}
 	
-	override func draw(_ rect: CGRect) {
+	public override func draw(_ rect: CGRect) {
 		super.draw(rect)
 		guard let ctx = UIGraphicsGetCurrentContext() else { return }
 		
@@ -288,19 +288,19 @@ final class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDele
 		}
 	}
 	
-	func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+	public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
 		stop()
 	}
 	
-	func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+	public func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
 		
 	}
 	
-	func audioPlayerBeginInterruption(_ player: AVAudioPlayer) {
+	public func audioPlayerBeginInterruption(_ player: AVAudioPlayer) {
 		stop()
 	}
 	
-	func audioPlayerEndInterruption(_ player: AVAudioPlayer, withOptions flags: Int) {
+	public func audioPlayerEndInterruption(_ player: AVAudioPlayer, withOptions flags: Int) {
 		
 	}
 }

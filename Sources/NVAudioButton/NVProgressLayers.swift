@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-enum NVProgressLayersShape {
+public enum NVProgressLayersShape {
 	case circle
 	case rectangle
 }
@@ -18,7 +18,7 @@ protocol NVProgressLayersDelegate: NSObject {
 	func currentCornerRadius(_ radius: CGFloat)
 }
 
-final class NVProgressLayers: NSObject {
+public class NVProgressLayers: NSObject {
 	var progress: CGFloat = 0.0 {
 		didSet {
 			self.progressLayer?.strokeEnd = (progress * 100).rounded() / 100
