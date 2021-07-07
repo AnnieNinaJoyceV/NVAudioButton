@@ -32,6 +32,7 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 	
 	//***************----------------****************//
 	
+	private let imageCache = NSCache<NSString, UIImage>()
 	private var player: AVAudioPlayer?
 	private var progressLayers: NVProgressLayers?
 	private var playState: NVAudioButtonState?
@@ -68,6 +69,12 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 	public var artWork: UIImage? {
 		didSet {
 			setNeedsDisplay()
+		}
+	}
+	
+	public var artworkURL: URL? {
+		didSet {
+			loadImageUsingCache(withUrl: artworkURL)
 		}
 	}
 	
@@ -191,6 +198,38 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		self.progressLayers?.progressColor = progressColor
 		//configure audio session, register notification for handleRouteChange.
 		NVAudioSessionConfig.instanceVar?.registerAudioSessionNotification(for: self)
+	}
+	
+	private
+	func loadImageUsingCache(withUrl url : URL?) {
+		guard let url = url else { return }
+		self.artWork = nil
+		
+		// check cached image
+		if let cachedImage = imageCache.object(forKey: url.absoluteString as NSString)  {
+			self.artWork = cachedImage
+			return
+		}
+		
+		let activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView(style: .gray)
+		addSubview(activityIndicator)
+		activityIndicator.startAnimating()
+		activityIndicator.center = self.center
+		
+		// if not, download image from url
+		URLSession.shared.dataTask(with: url, completionHandler: { [weak self] (data, response, error) in
+			guard let self = self, error == nil, let data = data else {
+				return
+			}
+			DispatchQueue.main.async {
+				if let image = UIImage(data: data) {
+					self.imageCache.setObject(image, forKey: url.absoluteString as NSString)
+					self.artWork = image
+					activityIndicator.removeFromSuperview()
+				}
+			}
+			
+		}).resume()
 	}
 	
 	public override func layoutSubviews() {
