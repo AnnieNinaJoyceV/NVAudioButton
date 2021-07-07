@@ -36,12 +36,6 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 	private var player: AVAudioPlayer?
 	private var progressLayers: NVProgressLayers?
 	private var playState: NVAudioButtonState?
-	private var backgroundCornRadius: CGFloat = 0.0 {
-		didSet {
-			self.layer.cornerRadius = backgroundCornRadius
-			setNeedsDisplay()
-		}
-	}
 	private var eclipseRect = CGRect.zero
 	private var stopRect = CGRect.zero
 	private var topPoint = CGPoint.zero
@@ -64,6 +58,13 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 			player = nil
 		}
 		NVAudioSessionConfig.instanceVar?.unregisterAudioSessionNotification(for: self)
+	}
+	
+	public var backgroundCornRadius: CGFloat = 0.0 {
+		didSet {
+			self.layer.cornerRadius = backgroundCornRadius
+			setNeedsDisplay()
+		}
 	}
 	
 	public var artWork: UIImage? {
