@@ -18,7 +18,10 @@ enum NVAudioButtonState {
 public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDelegate, NVAudioSessionConfigDelegate {
 	
 	func currentCornerRadius(_ radius: CGFloat) {
-		backgroundCornRadius = radius
+		guard shape == .circle else {
+			return
+		}
+		cornerRadius = radius
 	}
 	
 	func currentProgress() -> CGFloat {
@@ -60,9 +63,12 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		NVAudioSessionConfig.instanceVar?.unregisterAudioSessionNotification(for: self)
 	}
 	
-	public var backgroundCornRadius: CGFloat = 0.0 {
+	public var cornerRadius: CGFloat = 0.0 {
 		didSet {
-			self.layer.cornerRadius = backgroundCornRadius
+			guard shape == .rectangle else {
+				return
+			}
+			self.progressLayers?.backgroundCornRadius = cornerRadius
 			setNeedsDisplay()
 		}
 	}
@@ -142,7 +148,6 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 				playState = .idle
 			}
 			catch {
-				print(error.localizedDescription)
 				playState = .failed
 			}
 		}
@@ -245,12 +250,13 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		guard let ctx = UIGraphicsGetCurrentContext() else { return }
 		
 		backgroundColor?.setFill()
-		let path = UIBezierPath(roundedRect: self.bounds, cornerRadius: backgroundCornRadius)
+		let path = UIBezierPath(roundedRect: self.bounds, cornerRadius: cornerRadius)
 		path.fill()
 		
 		if let image = artWork {
 			let spacing: CGFloat = 5 + lineWidth
 			let drawingRect = self.bounds.inset(by: UIEdgeInsets.init(top: spacing, left: spacing, bottom: spacing, right: spacing))
+			UIBezierPath(roundedRect: drawingRect, cornerRadius: cornerRadius).addClip()
 			image.draw(in: drawingRect)
 		}
 		
@@ -316,8 +322,7 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		let reasonValue: AVAudioSession.RouteChangeReason = notification?.userInfo?[AVAudioSessionRouteChangeReasonKey] as? AVAudioSession.RouteChangeReason ?? .unknown
 		let routeDescription = notification?.userInfo?[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription
 		
-		if let routeDescription = routeDescription {
-			print(routeDescription.debugDescription)
+		if let _ = routeDescription {
 			switch reasonValue {
 				case AVAudioSession.RouteChangeReason.oldDeviceUnavailable:
 					stop()

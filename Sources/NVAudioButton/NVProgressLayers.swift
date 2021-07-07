@@ -60,6 +60,12 @@ public class NVProgressLayers: NSObject {
 		}
 	}
 	
+	public var backgroundCornRadius: CGFloat = 0.0 {
+		didSet {
+			drawLayers()
+		}
+	}
+	
 	private
 	func drawLayers() {
 		
@@ -75,7 +81,7 @@ public class NVProgressLayers: NSObject {
 				delegate?.currentCornerRadius(cRadi)
 				break
 			case .rectangle:
-				let radi = shapeForRectangle(view: view)
+				let radi = shapeForRectangle(view: view, cornerRadius: backgroundCornRadius)
 				delegate?.currentCornerRadius(radi)
 				break
 		}
@@ -101,7 +107,7 @@ public class NVProgressLayers: NSObject {
 	func shapeForCircle(view: UIView) -> CGFloat {
 		let center = CGPoint(x: view.bounds.width / 2, y: view.bounds.height / 2)
 		let radius: CGFloat = (view.bounds.width - lineWidth) / 2
-
+		
 		backgroundLayer = NVCommoners.createRingLayer(withCenter: center, radius: radius, lineWidth: lineWidth, color: backColor, lineWidth: lineWidth)
 		progressLayer = NVCommoners.createRingLayer(withCenter: center, radius: radius, lineWidth: lineWidth, color: progressColor, lineWidth: lineWidth)
 		loadingLayer = NVCommoners.createRingLayer(withCenter: center, radius: radius, lineWidth: lineWidth, color: progressColor, lineWidth: lineWidth)
@@ -109,16 +115,19 @@ public class NVProgressLayers: NSObject {
 	}
 	
 	private
-	func shapeForRectangle(view: UIView) -> CGFloat {
+	func shapeForRectangle(view: UIView, cornerRadius: CGFloat = 0.0) -> CGFloat {
 		
 		let tempWidth: CGFloat = view.frame.width - lineWidth
 		let tempHeight: CGFloat = view.frame.height - lineWidth
-		var tempCornerRadius: CGFloat = min(tempWidth, tempHeight) / 6
-		if (lineWidth * 2 < tempCornerRadius) {
-			tempCornerRadius = lineWidth * 2
+		var tempCornerRadius: CGFloat = cornerRadius
+		if tempCornerRadius == 0.0 {
+			tempCornerRadius = min(tempWidth, tempHeight) / 6
+			if (lineWidth * 2 < tempCornerRadius) {
+				tempCornerRadius = lineWidth * 2
+			}
 		}
 		let rect: CGRect = CGRect(x: lineWidth / 2, y: lineWidth / 2, width: tempWidth, height: tempHeight)
-				
+		
 		backgroundLayer = NVCommoners.createRoundRectLayer(with: rect, cornerRadius: tempCornerRadius, lineWidth: lineWidth, color: backColor)
 		progressLayer = NVCommoners.createRoundRectLayer(with: rect, cornerRadius: tempCornerRadius, lineWidth: lineWidth, color: progressColor)
 		loadingLayer = NVCommoners.createCircleLayerInclude(rect, cornerRadius: tempCornerRadius, lineWidth: lineWidth, color: progressColor)

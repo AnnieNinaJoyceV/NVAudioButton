@@ -43,7 +43,7 @@ struct NVCommoners {
 	
 	static
 	func createCircleLayerInclude(_ rect: CGRect, cornerRadius: CGFloat, lineWidth aLineWidth: CGFloat, color: UIColor?) -> CAShapeLayer? {
-
+		
 		let smallRadius = (min(rect.size.width, rect.size.height) - aLineWidth) / 2
 		let powWidth2 = pow( (rect.size.width + aLineWidth) / 2, 2)
 		let powHeight2 = pow( (rect.size.height + aLineWidth) / 2, 2)
