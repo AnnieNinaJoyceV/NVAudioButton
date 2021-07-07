@@ -30,6 +30,7 @@ final class NVAudioSessionConfig: NSObject {
 	func configAudioSession() {
 		do {
 			try AVAudioSession.sharedInstance().setCategory(.playAndRecord)
+			try AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
 			try AVAudioSession.sharedInstance().setActive(true)
 			isConfigured = true
 		} catch {
