@@ -8,11 +8,20 @@
 import UIKit
 import AVKit
 
-enum NVAudioButtonState {
+public enum NVAudioButtonState {
 	case idle
 	case loading
 	case playing
 	case failed
+}
+
+public protocol NVAudioButtonDelegate: NSObjectProtocol {
+	/**
+	calls when a NVAudioButton's state changes
+	button - current active NVAudioButton
+	state - state of the audio button
+	*/
+	func stateChanged(button: NVAudioButton, state: NVAudioButtonState?)
 }
 
 public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDelegate, NVAudioSessionConfigDelegate {
@@ -35,14 +44,34 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 	
 	//***************----------------****************//
 	
+	/// NSCache variable to hold image cache
+	/// - realted to `artworkURL` property
 	private let imageCache = NSCache<NSString, UIImage>()
+	/// To play the audio
 	private var player: AVAudioPlayer?
+	/// To show the progress when audio plays
 	private var progressLayers: NVProgressLayers?
-	private var playState: NVAudioButtonState?
+	/// To represent current state of the button corresponding with the audio
+	///
+	/// Possible states are
+	/// - idle
+	/// - loading
+	/// - playing
+	/// - failed
+	private var playState: NVAudioButtonState? {
+		didSet {
+			audioButtonDelegate?.stateChanged(button: self, state: playState)
+		}
+	}
+	/// rect of the control circle that holds play/pause/stop icon
 	private var eclipseRect = CGRect.zero
+	/// rect of the stop icon
 	private var stopRect = CGRect.zero
+	/// play icon's top point
 	private var topPoint = CGPoint.zero
+	/// play icon's right point
 	private var rightPoint = CGPoint.zero
+	/// play icon's bottom point
 	private var bottomPoint = CGPoint.zero
 	
 	override init(frame: CGRect) {
@@ -63,6 +92,10 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		NVAudioSessionConfig.instanceVar?.unregisterAudioSessionNotification(for: self)
 	}
 	
+	/// `NVAudioButton` delegate
+	public var audioButtonDelegate: NVAudioButtonDelegate? = nil
+	
+	/// corner radius
 	public var cornerRadius: CGFloat = 0.0 {
 		didSet {
 			guard shape == .rectangle else {
@@ -73,18 +106,21 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		}
 	}
 	
+	/// artwork image
 	public var artWork: UIImage? {
 		didSet {
 			setNeedsDisplay()
 		}
 	}
 	
+	/// artwork image's remote URL/link
 	public var artworkURL: URL? {
 		didSet {
 			loadImageUsingCache(withUrl: artworkURL)
 		}
 	}
 	
+	/// progress line's width
 	public var lineWidth: CGFloat = 2.0 {
 		didSet {
 			self.progressLayers?.lineWidth = lineWidth
@@ -92,6 +128,7 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		}
 	}
 	
+	/// shape of the button -- rectangle or circle
 	public var shape: NVProgressLayersShape = .rectangle {
 		didSet {
 			self.progressLayers?.progressShape = shape
@@ -99,6 +136,7 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		}
 	}
 	
+	/// progress layer's color
 	public var progressColor: UIColor = .systemGray {
 		didSet {
 			self.progressLayers?.progressColor = progressColor
@@ -106,24 +144,28 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		}
 	}
 	
+	/// play/pause/stop control holder's (circle background) color
 	public var controlsBackgroundColor: UIColor = .white {
 		didSet {
 			setNeedsDisplay()
 		}
 	}
 	
+	/// play/pause/stop icon's color
 	public var controlsColor: UIColor = .systemGray {
 		didSet {
 			setNeedsDisplay()
 		}
 	}
 	
+	/// play/pause/stop icon's ratio to the button
 	public var controlRatio: CGFloat = 1.0 {
 		didSet {
 			updateFrame()
 		}
 	}
 	
+	/// audio's url - supports both local and remote
 	public var audioUrl: URL? {
 		didSet {
 			playState = .loading
