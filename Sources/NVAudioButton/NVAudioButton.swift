@@ -350,6 +350,7 @@ public class NVAudioButton: UIButton, NVProgressLayersDelegate, AVAudioPlayerDel
 		return false
 	}
 	
+	public
 	func stop() {
 		if let player = player {
 			player.stop()
